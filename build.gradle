@@ -1,0 +1,64 @@
+buildscript {
+    repositories {
+        maven {
+            url "https://plugins.gradle.org/m2/"
+        }
+        mavenCentral()
+    }
+    dependencies {
+        classpath "gradle.plugin.com.palantir.gradle.docker:gradle-docker:0.13.0"
+    }
+}
+
+plugins {
+    id 'java'
+    id 'idea'
+    id 'com.palantir.docker' version '0.13.0'
+    id 'com.palantir.docker-run' version '0.13.0'
+}
+
+apply plugin: 'application'
+apply plugin: 'build-announcements'
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+   testCompile 'junit:junit:4.12'
+}
+
+mainClassName = "com.github.joostvdg.dui.App"
+jar {
+    baseName = 'DUI'
+    version =  '0.1.0'
+    manifest {
+        attributes 'Implementation-Title': baseName,
+                    'Implementation-Version': version,
+                    'Main-Class' : mainClassName
+
+    }
+}
+
+sourceCompatibility = 1.8
+targetCompatibility = 1.8
+
+docker {
+    name 'dui'
+    files tasks.jar.outputs, "${jar.baseName}-${jar.version}.jar"
+}
+
+
+dockerRun {
+    name 'dui'
+    image 'dui'
+    daemonize true
+}
+
+task info {
+    doLast {
+        println "App: ${jar.baseName}-${jar.version}.jar"
+        println "Binary: ${tasks.jar.outputs}"
+        println "MainClass: ${mainClassName}"
+    }
+}
